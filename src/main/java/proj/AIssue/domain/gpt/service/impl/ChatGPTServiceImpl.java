@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -25,13 +26,11 @@ import java.util.Map;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class ChatGPTServiceImpl implements ChatGPTService {
 
     private final ChatGPTConfig chatGPTConfig;
-
-    public ChatGPTServiceImpl(ChatGPTConfig chatGPTConfig) {
-        this.chatGPTConfig = chatGPTConfig;
-    }
+    private final ObjectMapper objectMapper;
 
     @Value("${openai.url.model}")
     private String modelUrl;
@@ -62,8 +61,7 @@ public class ChatGPTServiceImpl implements ChatGPTService {
                 .exchange(modelUrl, HttpMethod.GET, new HttpEntity<>(headers), String.class);
         try {
             // Jackson을 기반으로 응답
-            ObjectMapper om = new ObjectMapper();
-            Map<String, Object> data = om.readValue(response.getBody(), new TypeReference<>() {
+            Map<String, Object> data = objectMapper.readValue(response.getBody(), new TypeReference<>() {
             });
 
             // 응답 값을 결과값에 넣고 출력
@@ -101,8 +99,7 @@ public class ChatGPTServiceImpl implements ChatGPTService {
                 .exchange(modelListUrl + "/" + modelName, HttpMethod.GET, new HttpEntity<>(headers), String.class);
         try {
             // Jackson을 기반으로 응답값을 가져온다.
-            ObjectMapper om = new ObjectMapper();
-            result = om.readValue(response.getBody(), new TypeReference<>() {
+            result = objectMapper.readValue(response.getBody(), new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             log.debug("JsonMappingException :: " + e.getMessage());
@@ -130,9 +127,8 @@ public class ChatGPTServiceImpl implements ChatGPTService {
 
         Map<String, Object> resultMap = new HashMap<>();
         try {
-            ObjectMapper om = new ObjectMapper();
             // String -> HashMap 역직렬화를 구성
-            resultMap = om.readValue(response.getBody(), new TypeReference<>() {
+            resultMap = objectMapper.readValue(response.getBody(), new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             log.debug("JsonMappingException :: " + e.getMessage());
@@ -161,8 +157,7 @@ public class ChatGPTServiceImpl implements ChatGPTService {
                 .exchange(promptUrl, HttpMethod.POST, requestEntity, String.class);
         try {
             // String -> HashMap 역직렬화를 구성
-            ObjectMapper om = new ObjectMapper();
-            resultMap = om.readValue(response.getBody(), new TypeReference<>() {
+            resultMap = objectMapper.readValue(response.getBody(), new TypeReference<>() {
             });
         } catch (JsonProcessingException e) {
             log.debug("JsonMappingException :: " + e.getMessage());
